@@ -1,0 +1,57 @@
+- name: Create the validator and link the feeder
+  hosts: localhost
+  gather_facts: no
+  vars:
+
+    moniker: "{{ moniker }}"
+    details: "node_runner"
+    website: "https://rapidnode.xyz/"
+    security_contact: "Rapid Discord"
+    feeder_address: "{{ feeder_address }}"
+
+
+  tasks:
+    - name: Get the validator's public key
+      shell: pryzmd tendermint show-validator
+      register: validator_pubkey
+
+    - name: Create Validator
+      shell: |
+        pryzmd tx staking create-validator -y \
+          --pubkey '{{ validator_pubkey.stdout }}' \
+          --amount 1000000upryzm \
+          --moniker "{{ moniker }}" \
+          --identity "" \
+          --details "{{ details }}" \
+          --website "{{ website }}" \
+          --security-contact "{{ security_contact }}" \
+          --chain-id indigo-1 \
+          --from feeder \
+          --commission-rate "0.05" \
+          --commission-max-rate "0.20" \
+          --commission-max-change-rate "0.01" \
+          --min-self-delegation "1" \
+          --gas-adjustment 1.4 \
+          --gas auto \
+          --gas-prices 0.015upryzm
+      ignore_errors: True
+    
+    - name: Link Validator to Feeder
+      shell: |
+        pryzmd tx oracle delegate-feed-consent -y "{{ feeder_address }}" --fees 2000factory/pryzm15k9s9p0ar0cx27nayrgk6vmhyec3lj7vkry7rx/uusdsim,3000upryzm --from feeder
+      ignore_errors: True
+
+    - name: Ensure the Pryzm Feeder directory exists
+      ansible.builtin.file:
+        path: "/root/pryzmfeeder/logs"
+        state: directory
+
+    - name: Capture validator address
+      ansible.builtin.command:
+        cmd: pryzmd keys show feeder --bech val -a
+      register: validator_address
+      changed_when: false    
+
+    - name: Display Validator Address
+      debug:
+        msg: "Validator address: {{ validator_address }}"
