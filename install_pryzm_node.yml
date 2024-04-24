@@ -85,7 +85,7 @@
           shell: |
             pryzmd config chain-id {{ chain_id }}
             pryzmd config keyring-backend test
-            pryzmd config node tcp://localhost:23257
+            pryzmd config node tcp://172.17.0.1:23257
         - name: Initialize Node
           shell: pryzmd init {{ moniker }} --chain-id {{ chain_id }}
 
@@ -127,9 +127,9 @@
         regexp: "{{ item.regexp }}"
         replace: "{{ item.replace }}"
       loop:
-        - { regexp: '^proxy_app = "tcp://127.0.0.1:26658"', replace: 'proxy_app = "tcp://127.0.0.1:23258"' }
-        - { regexp: '^laddr = "tcp://127.0.0.1:26657"', replace: 'laddr = "tcp://127.0.0.1:23257"' }
-        - { regexp: '^pprof_laddr = "localhost:6060"', replace: 'pprof_laddr = "localhost:23260"' }
+        - { regexp: '^proxy_app = "tcp://127.0.0.1:26658"', replace: 'proxy_app = "tcp://172.17.0.1:23258"' }
+        - { regexp: '^laddr = "tcp://127.0.0.1:26657"', replace: 'laddr = "tcp://172.17.0.1:23257"' }
+        - { regexp: '^pprof_laddr = "localhost:6060"', replace: 'pprof_laddr = "172.17.0.1:23260"' }
         - { regexp: '^laddr = "tcp://0.0.0.0:26656"', replace: 'laddr = "tcp://0.0.0.0:23256"' }
         - { regexp: '^prometheus_listen_addr = ":26660"', replace: 'prometheus_listen_addr = ":23266"' }
         
