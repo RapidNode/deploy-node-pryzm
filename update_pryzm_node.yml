@@ -3,8 +3,8 @@
   hosts: localhost
   become: true
   vars:
-    pryzmd_version_url: "0.13.0"
-    pryzmd_version_path: "0.13" 
+    pryzmd_version_url: "0.15.0"
+    pryzmd_version_path: "0.15"
     pryzm_directory: "/root/.pryzm"
     pryzm_binary_url: "https://storage.googleapis.com/pryzm-zone/core/{{ pryzmd_version_url }}/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
     binary_path: "/usr/local/bin/pryzmd"
@@ -42,12 +42,42 @@
       copy:
         src: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
         dest: "{{ pryzm_directory }}/cosmovisor/upgrades/v{{ pryzmd_version_path }}/bin/pryzmd"
+        mode: '0755'
         remote_src: yes
+
+    - name: Copy new binary to genesis directory
+      copy:
+        src: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
+        dest: "/root/.pryzm/cosmovisor/genesis/bin/pryzmd"
+        remote_src: yes
+        force: yes
 
     - name: Remove temporary binary file
       file:
         path: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
         state: absent
+
+    - name: Download and extract the latest chain snapshot
+      block:
+        - name: Download snapshot
+          get_url:
+            url: "https://testnet-files.itrocket.net/pryzm/snap_pryzm.tar.lz4"
+            dest: "/tmp/pryzm-latest.tar.lz4"
+        - name: Extract snapshot
+          shell: |
+            lz4 -d /tmp/pryzm-latest.tar.lz4 | tar xf - -C {{ pryzm_directory }}
+
+    - name: Check if upgrade-info.json exists
+      stat:
+        path: "{{ pryzm_directory }}/data/upgrade-info.json"
+      register: upgrade_info
+
+    - name: Copy upgrade info json if present
+      copy:
+        src: "{{ pryzm_directory }}/data/upgrade-info.json"
+        dest: "{{ pryzm_directory }}/cosmovisor/genesis/upgrade-info.json"
+        remote_src: yes
+      when: upgrade_info.stat.exists
 
     - name: Start Pryzm node service
       systemd:
