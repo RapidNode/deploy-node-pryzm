@@ -47,8 +47,8 @@
 
     - name: Copy new binary to genesis directory
       copy:
-        src: "/tmp/pryzmd-{{ pryzmd_version }}.0-linux-amd64"
-        dest: "//root/.pryzm/cosmovisor/genesis/bin/pryzmd"
+        src: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
+        dest: "/root/.pryzm/cosmovisor/genesis/bin/pryzmd"
         remote_src: yes
         force: yes
 
@@ -56,6 +56,28 @@
       file:
         path: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
         state: absent
+
+    - name: Download and extract the latest chain snapshot
+      block:
+        - name: Download snapshot
+          get_url:
+            url: "https://testnet-files.itrocket.net/pryzm/snap_pryzm.tar.lz4"
+            dest: "/tmp/pryzm-latest.tar.lz4"
+        - name: Extract snapshot
+          shell: |
+            lz4 -d /tmp/pryzm-latest.tar.lz4 | tar xf - -C {{ pryzm_directory }}
+
+    - name: Check if upgrade-info.json exists
+      stat:
+        path: "{{ pryzm_directory }}/data/upgrade-info.json"
+      register: upgrade_info
+
+    - name: Copy upgrade info json if present
+      copy:
+        src: "{{ pryzm_directory }}/data/upgrade-info.json"
+        dest: "{{ pryzm_directory }}/cosmovisor/genesis/upgrade-info.json"
+        remote_src: yes
+      when: upgrade_info.stat.exists
 
     - name: Start Pryzm node service
       systemd:
