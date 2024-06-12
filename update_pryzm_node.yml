@@ -57,11 +57,15 @@
         path: "/tmp/pryzmd-{{ pryzmd_version_url }}-linux-amd64"
         state: absent
 
+    - name: Unsafe Reset All
+      shell: |
+        pryzmd tendermint unsafe-reset-all --home /root/.pryzm --keep-addr-book
+
     - name: Download and extract the latest chain snapshot
       block:
         - name: Download snapshot
           get_url:
-            url: "https://testnet-files.itrocket.net/pryzm/snap_pryzm.tar.lz4"
+            url: "https://snapshots.spacestake.tech/testnet-snapshots/pryzm/latest.tar.lz4"
             dest: "/tmp/pryzm-latest.tar.lz4"
         - name: Extract snapshot
           shell: |
