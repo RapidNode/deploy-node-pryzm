@@ -65,8 +65,23 @@
       block:
         - name: Download snapshot
           get_url:
-            url: "https://snapshots.spacestake.tech/testnet-snapshots/pryzm/latest.tar.lz4"
+            url: "https://server-4.itrocket.net/testnet/pryzm/"
+            dest: "/root/webpage_pryzm.html"
+
+        - name: Extract snapshot URL from the HTML page
+          shell: |
+            grep -o "pryzm_[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}_[0-9]*_snap\.tar\.lz4" /root/webpage_pryzm.html | tail -n 1
+          register: snapshot_file
+
+        - name: Set snapshot download URL
+          set_fact:
+            snapshot_url: "https://server-4.itrocket.net/testnet/pryzm/{{ snapshot_file.stdout }}"
+
+        - name: Download the latest snapshot
+          get_url:
+            url: "{{ snapshot_url }}"
             dest: "/tmp/pryzm-latest.tar.lz4"
+
         - name: Extract snapshot
           shell: |
             lz4 -d /tmp/pryzm-latest.tar.lz4 | tar xf - -C {{ pryzm_directory }}
