@@ -3,6 +3,7 @@
   hosts: localhost
   become: true
   vars:
+    ansible_python_interpreter: /usr/bin/python3.10  # Explicit Python path
     pryzm_feeder_directory: "/root/pryzmfeeder"
     pryzm_wallet_directory: "/root/.pryzm"
     pryzm_feeder_service_name: "pryzm-feeder.service"

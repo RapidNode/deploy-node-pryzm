@@ -3,6 +3,7 @@
   gather_facts: no
   vars:
 
+    ansible_python_interpreter: /usr/bin/python3.10  # Explicit Python path
     moniker: "{{ moniker }}"
     details: "node_runner"
     website: "https://rapidnode.xyz/"
